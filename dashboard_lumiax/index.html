@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard BASE_LUMIAX + Metas + Funil</title>
+
+  <!-- Bibliotecas externas -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="header">
+    <h1>Dashboard BASE_LUMIAX + Metas + Funil</h1>
+    <p>
+      Carregue as bases: BASE_LUMIAX, dias úteis, custo, meta regional, orçamento anual e funil.
+    </p>
+  </div>
+
+  <div class="container">
+
+    <div id="globalAlert" class="alert info" hidden></div>
+
+    <div class="card">
+      <h2>Arquivos</h2>
+
+      <div class="inputs">
+        <label>
+          BASE_LUMIAX
+          <input type="file" id="mainFile" accept=".xlsx,.xls,.csv">
+          <span id="mainStatus" class="file-status">não carregado</span>
+        </label>
+
+        <label>
+          Dias úteis
+          <input type="file" id="daysFile" accept=".xlsx,.xls,.csv">
+          <span id="daysStatus" class="file-status">não carregado</span>
+        </label>
+
+        <label>
+          Custo
+          <input type="file" id="costFile" accept=".xlsx,.xls,.csv">
+          <span id="costStatus" class="file-status">não carregado</span>
+        </label>
+
+        <label>
+          Meta regional
+          <input type="file" id="metaFile" accept=".xlsx,.xls,.csv">
+          <span id="metaStatus" class="file-status">não carregado</span>
+        </label>
+
+        <label>
+          Orçamento por ano
+          <input type="file" id="budgetFile" accept=".xlsx,.xls,.csv">
+          <span id="budgetStatus" class="file-status">não carregado</span>
+        </label>
+
+        <label>
+          Base Funil
+          <input type="file" id="funnelFile" accept=".xlsx,.xls,.csv">
+          <span id="funnelStatus" class="file-status">não carregado</span>
+        </label>
+      </div>
+
+      <div id="warnings"></div>
+    </div>
+
+    <div class="card">
+      <h2>Parâmetros</h2>
+
+      <div class="controls">
+        <label>
+          Mês foco
+          <select id="focusMonth"></select>
+        </label>
+
+        <label>
+          Data de corte
+          <input type="date" id="cutoffDate">
+        </label>
+
+        <label>
+          Período
+          <select id="periodSelect">
+            <option value="all">Todos os meses</option>
+            <option value="year">Ano do mês foco</option>
+            <option value="last12" selected>Últimos 12 meses até o foco</option>
+            <option value="last6">Últimos 6 meses até o foco</option>
+            <option value="last3">Últimos 3 meses até o foco</option>
+          </select>
+        </label>
+
+        <label>
+          Meta de demandantes (opcional)
+          <input type="number" id="metaDemandantes" step="1" min="0" placeholder="Ex.: 216">
+        </label>
+
+        <div class="muted">
+          <strong>DU aberto</strong> = peso até a data de corte.<br>
+          <strong>DU fechado</strong> = peso total do mês.
+        </div>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="card kpi">
+        <div class="label">Realizado mês foco</div>
+        <div class="value" id="kpiRealizado">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Tendência mês foco</div>
+        <div class="value" id="kpiTendencia">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Receita / DU aberto</div>
+        <div class="value" id="kpiRobDu">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Custo mês foco</div>
+        <div class="value" id="kpiCusto">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Margem mês foco</div>
+        <div class="value" id="kpiMargem">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Margem %</div>
+        <div class="value" id="kpiMargemPct">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Demandantes mês foco</div>
+        <div class="value" id="kpiDemandantes">-</div>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="card kpi">
+        <div class="label">Projeção do ano</div>
+        <div class="value" id="kpiProjecao">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Orçamento do ano</div>
+        <div class="value" id="kpiOrcamento">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Gap orçamento</div>
+        <div class="value" id="kpiGapOrcamento">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Meta mês foco</div>
+        <div class="value" id="kpiMetaMes">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Atingimento mês foco</div>
+        <div class="value" id="kpiAtingimentoMes">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Meta demandantes</div>
+        <div class="value" id="kpiMetaDemandantes">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Gap demandantes</div>
+        <div class="value" id="kpiGapDemandantes">-</div>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <div class="card col-6">
+        <h2>Receita realizada x tendência</h2>
+        <div class="chart-box">
+          <canvas id="chartTendencia"></canvas>
+        </div>
+      </div>
+
+      <div class="card col-6">
+        <h2>Tendência RDI x MTG</h2>
+        <div class="chart-box">
+          <canvas id="chartRdiMtg"></canvas>
+        </div>
+      </div>
+
+      <div class="card col-6">
+        <h2>Meta regional no mês foco</h2>
+        <div class="chart-box">
+          <canvas id="chartMetaRegional"></canvas>
+        </div>
+        <div style="margin-top:12px;" class="table-wrap" id="regionalMetaTable"></div>
+      </div>
+
+      <div class="card col-6">
+        <h2>Projeção x Orçamento</h2>
+        <div class="chart-box">
+          <canvas id="chartBudget"></canvas>
+        </div>
+
+        <h3>Serviços x meta no mês foco</h3>
+        <div class="table-wrap" id="serviceMetaTable"></div>
+      </div>
+
+      <div class="card col-12">
+        <h2>Tendência total</h2>
+        <div class="table-wrap" id="trendTable"></div>
+      </div>
+
+      <div class="card col-12">
+        <h2>RDI | MTG por mês</h2>
+        <div class="table-wrap" id="rdiMtgTable"></div>
+      </div>
+
+      <div class="card col-12">
+        <h2>Margem por mês</h2>
+        <div class="table-wrap" id="marginTable"></div>
+      </div>
+
+      <div class="card col-12">
+        <h2>Funil / potencial por CNPJ</h2>
+        <div class="muted" style="margin-bottom:8px;">
+          Mostra CNPJs da Base Funil que tiveram movimento no mês foco ou no mês anterior.
+        </div>
+        <div class="table-wrap" id="funnelTable"></div>
+      </div>
+
+      <div class="card col-6">
+        <h2>Demandantes por mês</h2>
+        <div class="table-wrap" id="demandMonthTable"></div>
+      </div>
+
+      <div class="card col-6">
+        <h2>Regionais no mês foco</h2>
+        <div class="table-wrap" id="regionalTable"></div>
+      </div>
+
+      <div class="card col-6">
+        <h2>IDs acumulados no mês foco</h2>
+        <div class="chart-box">
+          <canvas id="chartDemandantes"></canvas>
+        </div>
+        <div style="margin-top:12px;" class="table-wrap" id="dailyIdsTable"></div>
+      </div>
+
+      <div class="card col-6">
+        <h2>Combinação de serviços no mês foco</h2>
+        <div id="serviceCombo"></div>
+
+        <h3>Exames sem custo encontrado</h3>
+        <div class="muted" style="margin-bottom:8px;">
+          Mostra os exames com receita, mas sem correspondência na base de custo.
+        </div>
+        <div class="table-wrap" id="missingCostTable"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Scripts em ordem de dependência -->
+  <script src="js/state.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/parsers.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/renderers.js"></script>
+  <script src="js/app.js"></script>
+
+  <script>
+    // Inicialização ao carregar a página
+    document.addEventListener('DOMContentLoaded', function() {
+      // Tentar restaurar dados salvos anteriormente
+      restoreState();
+    });
+  </script>
+</body>
+</html>
