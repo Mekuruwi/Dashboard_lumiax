@@ -79,16 +79,22 @@ function restoreState() {
   if (restored) {
     showGlobalAlert('Dados restaurados do armazenamento local.', 'info');
     updateAll();
+    updateFileStatusUI();
   }
 }
 
-function updateFileStatusUI(fileId, statusId, count, label) {
-  const statusEl = document.getElementById(statusId);
-  if (count > 0) {
-    statusEl.textContent = `${fmtInt(count)} ${label}`;
-    document.getElementById(fileId).dataset.loaded = 'true';
-  } else {
-    statusEl.textContent = 'não carregado';
-    document.getElementById(fileId).dataset.loaded = 'false';
+function updateFileStatusUI() {
+  updateFileStatus('mainStatus', state.mainRecords.length, 'registros');
+  updateFileStatus('daysStatus', state.diasMap.size, 'meses');
+  updateFileStatus('costStatus', state.costMap.size, 'itens');
+  updateFileStatus('metaStatus', state.metaMap.size, 'meses');
+  updateFileStatus('budgetStatus', state.budgetMap.size, 'anos');
+  updateFileStatus('funnelStatus', state.funnelMap.size, 'CNPJs');
+}
+
+function updateFileStatus(elementId, count, label) {
+  const statusEl = document.getElementById(elementId);
+  if (statusEl) {
+    statusEl.textContent = count > 0 ? `${fmtInt(count)} ${label}` : 'não carregado';
   }
 }
