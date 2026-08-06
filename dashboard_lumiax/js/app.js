@@ -1,5 +1,6 @@
 'use strict';
 
+// Estado global da aplicação
 const state = {
   mainRecords: [],
   daysRaw: [],
@@ -23,6 +24,7 @@ const state = {
   charts: []
 };
 
+// Mapeamento de aliases para colunas da BASE_LUMIAX
 const mainAliases = {
   unidade: ['unidade', 'unidad'],
   id: ['id'],
@@ -46,6 +48,7 @@ const mainAliases = {
   cnpj: ['cnpj']
 };
 
+// Mapeamento de aliases para colunas de dias úteis
 const dayAliases = {
   mesano: ['mesano', 'mes', 'competencia', 'periodo'],
   dia: ['dia', 'datadia', 'data'],
@@ -94,14 +97,14 @@ cutoffDate.value = toInputDate(state.cutoff);
 periodSelect.value = state.period;
 
 mainFile.addEventListener('change', () => {
-  loadFile(mainFile, parseMainAoA, result => {
+  loadFile(mainFile, 'mainFile', parseMainAoA, result => {
     state.mainRecords = result;
     saveToStorage('mainRecords', result);
   });
 });
 
 daysFile.addEventListener('change', () => {
-  loadFile(daysFile, parseDaysAoA, result => {
+  loadFile(daysFile, 'daysFile', parseDaysAoA, result => {
     state.daysRaw = result;
     state.diasMap = buildDiasMap(result);
     saveToStorage('daysRaw', result);
@@ -109,14 +112,14 @@ daysFile.addEventListener('change', () => {
 });
 
 costFile.addEventListener('change', () => {
-  loadFile(costFile, parseCostAoA, result => {
+  loadFile(costFile, 'costFile', parseCostAoA, result => {
     state.costMap = result;
     saveToStorage('costMap', Array.from(result.entries()));
   });
 });
 
 metaFile.addEventListener('change', () => {
-  loadFile(metaFile, parseMetaAoA, result => {
+  loadFile(metaFile, 'metaFile', parseMetaAoA, result => {
     state.metaMap = result.map;
     state.metaHeaders = result.headers;
     saveToStorage('metaData', { map: Array.from(result.map.entries()), headers: result.headers });
@@ -124,14 +127,14 @@ metaFile.addEventListener('change', () => {
 });
 
 budgetFile.addEventListener('change', () => {
-  loadFile(budgetFile, parseBudgetAoA, result => {
+  loadFile(budgetFile, 'budgetFile', parseBudgetAoA, result => {
     state.budgetMap = result;
     saveToStorage('budgetMap', Array.from(result.entries()));
   });
 });
 
 funnelFile.addEventListener('change', () => {
-  loadFile(funnelFile, parseFunnelAoA, result => {
+  loadFile(funnelFile, 'funnelFile', parseFunnelAoA, result => {
     state.funnelMap = result;
     saveToStorage('funnelMap', Array.from(result.entries()));
   });
@@ -158,7 +161,7 @@ metaDemandantesInput.addEventListener('input', () => {
   updateAll();
 });
 
-async function loadFile(input, parser, onSuccess) {
+async function loadFile(input, inputId, parser, onSuccess) {
   const file = input.files[0];
   if (!file) return;
 
@@ -168,6 +171,7 @@ async function loadFile(input, parser, onSuccess) {
     const result = parser(aoa);
     onSuccess(result);
     updateAll();
+    updateFileStatusUI();
     showGlobalAlert('Arquivo processado com sucesso.', 'info');
   } catch (error) {
     console.error(error);
