@@ -1,0 +1,2764 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard BASE_LUMIAX + Metas + Funil</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f4f6fb;
+      color: #1f2937;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #111827, #2563eb);
+      color: #fff;
+      padding: 24px 28px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .header p {
+      margin: 6px 0 0;
+      opacity: .85;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 1650px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(17, 24, 39, .08);
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+
+    h3 {
+      margin: 18px 0 10px;
+      font-size: 16px;
+    }
+
+    .inputs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 14px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    input[type="file"],
+    input[type="date"],
+    input[type="number"],
+    select {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      outline: none;
+      background: #fff;
+    }
+
+    .file-status {
+      font-size: 12px;
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      align-items: end;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .kpi .label {
+      color: #6b7280;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .kpi .value {
+      margin-top: 8px;
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+    }
+
+    .col-4 {
+      grid-column: span 4;
+    }
+
+    .col-6 {
+      grid-column: span 6;
+    }
+
+    .col-12 {
+      grid-column: span 12;
+    }
+
+    @media (max-width: 1100px) {
+      .col-4,
+      .col-6 {
+        grid-column: span 12;
+      }
+    }
+
+    .chart-box {
+      position: relative;
+      height: 320px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: 480px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #f9fafb;
+      z-index: 1;
+    }
+
+    tr:hover td {
+      background: #f8fafc;
+    }
+
+    .num {
+      text-align: right;
+    }
+
+    .alert {
+      margin: 14px 0;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    .info {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .warning {
+      background: #fef9c3;
+      color: #713f12;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #7f1d1d;
+    }
+
+    .muted {
+      color: #6b7280;
+      font-size: 13px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #eef2ff;
+      color: #3730a3;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Dashboard BASE_LUMIAX + Metas + Funil</h1>
+    <p>
+      Carregue as bases: BASE_LUMIAX, dias úteis, custo, meta regional, orçamento anual e funil.
+    </p>
+  </div>
+
+  <div class="container">
+
+    <div id="globalAlert" class="alert info" hidden></div>
+
+    <div class="card">
+      <h2>Arquivos</h2>
+
+      <div class="inputs">
+        <label>
+          BASE_LUMIAX
+          <input type="file" id="mainFile" accept=".xlsx,.xls,.csv">
+          <span id="mainStatus" class="file-status">não carregado</span>
+        </label>
+
+        <label>
+          Dias úteis
+          <input type="file" id="daysFile" accept=".xlsx,.xls,.csv">
+          <span id="daysStatus" class="file-status">não carregado</span>
+        </label>
+
+        <label>
+          Custo
+          <input type="file" id="costFile" accept=".xlsx,.xls,.csv">
+          <span id="costStatus" class="file-status">não carregado</span>
+        </label>
+
+        <label>
+          Meta regional
+          <input type="file" id="metaFile" accept=".xlsx,.xls,.csv">
+          <span id="metaStatus" class="file-status">não carregado</span>
+        </label>
+
+        <label>
+          Orçamento por ano
+          <input type="file" id="budgetFile" accept=".xlsx,.xls,.csv">
+          <span id="budgetStatus" class="file-status">não carregado</span>
+        </label>
+
+        <label>
+          Base Funil
+          <input type="file" id="funnelFile" accept=".xlsx,.xls,.csv">
+          <span id="funnelStatus" class="file-status">não carregado</span>
+        </label>
+      </div>
+
+      <div id="warnings"></div>
+    </div>
+
+    <div class="card">
+      <h2>Parâmetros</h2>
+
+      <div class="controls">
+        <label>
+          Mês foco
+          <select id="focusMonth"></select>
+        </label>
+
+        <label>
+          Data de corte
+          <input type="date" id="cutoffDate">
+        </label>
+
+        <label>
+          Período
+          <select id="periodSelect">
+            <option value="all">Todos os meses</option>
+            <option value="year">Ano do mês foco</option>
+            <option value="last12" selected>Últimos 12 meses até o foco</option>
+            <option value="last6">Últimos 6 meses até o foco</option>
+            <option value="last3">Últimos 3 meses até o foco</option>
+          </select>
+        </label>
+
+        <label>
+          Meta de demandantes (opcional)
+          <input type="number" id="metaDemandantes" step="1" min="0" placeholder="Ex.: 216">
+        </label>
+
+        <div class="muted">
+          <strong>DU aberto</strong> = peso até a data de corte.<br>
+          <strong>DU fechado</strong> = peso total do mês.
+        </div>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="card kpi">
+        <div class="label">Realizado mês foco</div>
+        <div class="value" id="kpiRealizado">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Tendência mês foco</div>
+        <div class="value" id="kpiTendencia">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Receita / DU aberto</div>
+        <div class="value" id="kpiRobDu">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Custo mês foco</div>
+        <div class="value" id="kpiCusto">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Margem mês foco</div>
+        <div class="value" id="kpiMargem">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Margem %</div>
+        <div class="value" id="kpiMargemPct">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Demandantes mês foco</div>
+        <div class="value" id="kpiDemandantes">-</div>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="card kpi">
+        <div class="label">Projeção do ano</div>
+        <div class="value" id="kpiProjecao">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Orçamento do ano</div>
+        <div class="value" id="kpiOrcamento">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Gap orçamento</div>
+        <div class="value" id="kpiGapOrcamento">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Meta mês foco</div>
+        <div class="value" id="kpiMetaMes">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Atingimento mês foco</div>
+        <div class="value" id="kpiAtingimentoMes">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Meta demandantes</div>
+        <div class="value" id="kpiMetaDemandantes">-</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="label">Gap demandantes</div>
+        <div class="value" id="kpiGapDemandantes">-</div>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <div class="card col-6">
+        <h2>Receita realizada x tendência</h2>
+        <div class="chart-box">
+          <canvas id="chartTendencia"></canvas>
+        </div>
+      </div>
+
+      <div class="card col-6">
+        <h2>Tendência RDI x MTG</h2>
+        <div class="chart-box">
+          <canvas id="chartRdiMtg"></canvas>
+        </div>
+      </div>
+
+      <div class="card col-6">
+        <h2>Meta regional no mês foco</h2>
+        <div class="chart-box">
+          <canvas id="chartMetaRegional"></canvas>
+        </div>
+        <div style="margin-top:12px;" class="table-wrap" id="regionalMetaTable"></div>
+      </div>
+
+      <div class="card col-6">
+        <h2>Projeção x Orçamento</h2>
+        <div class="chart-box">
+          <canvas id="chartBudget"></canvas>
+        </div>
+
+        <h3>Serviços x meta no mês foco</h3>
+        <div class="table-wrap" id="serviceMetaTable"></div>
+      </div>
+
+      <div class="card col-12">
+        <h2>Tendência total</h2>
+        <div class="table-wrap" id="trendTable"></div>
+      </div>
+
+      <div class="card col-12">
+        <h2>RDI | MTG por mês</h2>
+        <div class="table-wrap" id="rdiMtgTable"></div>
+      </div>
+
+      <div class="card col-12">
+        <h2>Margem por mês</h2>
+        <div class="table-wrap" id="marginTable"></div>
+      </div>
+
+      <div class="card col-12">
+        <h2>Funil / potencial por CNPJ</h2>
+        <div class="muted" style="margin-bottom:8px;">
+          Mostra CNPJs da Base Funil que tiveram movimento no mês foco ou no mês anterior.
+        </div>
+        <div class="table-wrap" id="funnelTable"></div>
+      </div>
+
+      <div class="card col-6">
+        <h2>Demandantes por mês</h2>
+        <div class="table-wrap" id="demandMonthTable"></div>
+      </div>
+
+      <div class="card col-6">
+        <h2>Regionais no mês foco</h2>
+        <div class="table-wrap" id="regionalTable"></div>
+      </div>
+
+      <div class="card col-6">
+        <h2>IDs acumulados no mês foco</h2>
+        <div class="chart-box">
+          <canvas id="chartDemandantes"></canvas>
+        </div>
+        <div style="margin-top:12px;" class="table-wrap" id="dailyIdsTable"></div>
+      </div>
+
+      <div class="card col-6">
+        <h2>Combinação de serviços no mês foco</h2>
+        <div id="serviceCombo"></div>
+
+        <h3>Exames sem custo encontrado</h3>
+        <div class="muted" style="margin-bottom:8px;">
+          Mostra os exames com receita, mas sem correspondência na base de custo.
+        </div>
+        <div class="table-wrap" id="missingCostTable"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    'use strict';
+
+    const state = {
+      mainRecords: [],
+      daysRaw: [],
+      diasMap: new Map(),
+      costMap: new Map(),
+      metaMap: new Map(),
+      metaHeaders: [],
+      budgetMap: new Map(),
+      funnelMap: new Map(),
+      monthList: [],
+      agg: new Map(),
+      focusMonth: '',
+      cutoff: stripTime(new Date()),
+      period: 'last12',
+      metaDemandantes: 0,
+      costInfo: {
+        matched: 0,
+        missing: 0,
+        total: 0
+      },
+      charts: []
+    };
+
+    const mainAliases = {
+      unidade: ['unidade', 'unidad'],
+      id: ['id'],
+      exames: ['exames', 'exame'],
+      modalidade: ['modalidade'],
+      faturamento: ['faturamento'],
+      data: [
+        'datadeconclusao',
+        'dataconclusao',
+        'datadeconclucao',
+        'dataconclucao',
+        'data',
+        'dtconclusao'
+      ],
+      mesano: ['mesano', 'mes', 'competencia'],
+      servico: ['servico', 'service'],
+      regional: ['regional', 'regiao'],
+      volume: ['volume', 'vol', 'qtd', 'quantidade'],
+      receita: ['receita', 'receitatotal', 'valortotal'],
+      unidadepadrao: ['unidadepadrao'],
+      cnpj: ['cnpj']
+    };
+
+    const dayAliases = {
+      mesano: ['mesano', 'mes', 'competencia', 'periodo'],
+      dia: ['dia', 'datadia', 'data'],
+      diasemana: ['dias', 'diadasemana', 'diasemana', 'diase', 'diasem'],
+      peso: ['peso', 'pond', 'valorpeso']
+    };
+
+    const costAliases = {
+      laudo: ['laudo', 'exame', 'descricao', 'servico', 'nomedoexame', 'procedimento'],
+      custo: ['custodoexame', 'custo', 'valorcusto', 'custounitario', 'valor']
+    };
+
+    const budgetAliases = {
+      ano: ['ano', 'year'],
+      valor: ['valor', 'orcamento', 'value', 'valororcado']
+    };
+
+    const funnelAliases = {
+      cnpj: ['cnpj'],
+      razao: ['razaosocial', 'razao', 'cliente'],
+      nomefantasia: ['nomefantasia', 'fantasia'],
+      regional: ['regional', 'regiao'],
+      potencial: ['potencial', 'valorpotencial', 'potencialmensal']
+    };
+
+    const mainFile = document.getElementById('mainFile');
+    const daysFile = document.getElementById('daysFile');
+    const costFile = document.getElementById('costFile');
+    const metaFile = document.getElementById('metaFile');
+    const budgetFile = document.getElementById('budgetFile');
+    const funnelFile = document.getElementById('funnelFile');
+
+    const mainStatus = document.getElementById('mainStatus');
+    const daysStatus = document.getElementById('daysStatus');
+    const costStatus = document.getElementById('costStatus');
+    const metaStatus = document.getElementById('metaStatus');
+    const budgetStatus = document.getElementById('budgetStatus');
+    const funnelStatus = document.getElementById('funnelStatus');
+
+    const focusMonth = document.getElementById('focusMonth');
+    const cutoffDate = document.getElementById('cutoffDate');
+    const periodSelect = document.getElementById('periodSelect');
+    const metaDemandantesInput = document.getElementById('metaDemandantes');
+
+    cutoffDate.value = toInputDate(state.cutoff);
+    periodSelect.value = state.period;
+
+    mainFile.addEventListener('change', () => {
+      loadFile(mainFile, parseMainAoA, result => {
+        state.mainRecords = result;
+      });
+    });
+
+    daysFile.addEventListener('change', () => {
+      loadFile(daysFile, parseDaysAoA, result => {
+        state.daysRaw = result;
+        state.diasMap = buildDiasMap(result);
+      });
+    });
+
+    costFile.addEventListener('change', () => {
+      loadFile(costFile, parseCostAoA, result => {
+        state.costMap = result;
+      });
+    });
+
+    metaFile.addEventListener('change', () => {
+      loadFile(metaFile, parseMetaAoA, result => {
+        state.metaMap = result.map;
+        state.metaHeaders = result.headers;
+      });
+    });
+
+    budgetFile.addEventListener('change', () => {
+      loadFile(budgetFile, parseBudgetAoA, result => {
+        state.budgetMap = result;
+      });
+    });
+
+    funnelFile.addEventListener('change', () => {
+      loadFile(funnelFile, parseFunnelAoA, result => {
+        state.funnelMap = result;
+      });
+    });
+
+    focusMonth.addEventListener('change', () => {
+      state.focusMonth = focusMonth.value;
+      updateAll();
+    });
+
+    cutoffDate.addEventListener('change', () => {
+      const parsed = parseInputDate(cutoffDate.value);
+      state.cutoff = parsed ? stripTime(parsed) : stripTime(new Date());
+      updateAll();
+    });
+
+    periodSelect.addEventListener('change', () => {
+      state.period = periodSelect.value;
+      updateAll();
+    });
+
+    metaDemandantesInput.addEventListener('input', () => {
+      state.metaDemandantes = parseNumber(metaDemandantesInput.value);
+      updateAll();
+    });
+
+    async function loadFile(input, parser, onSuccess) {
+      const file = input.files[0];
+      if (!file) return;
+
+      try {
+        showGlobalAlert(`Processando ${file.name}...`, 'info');
+        const aoa = await fileToAoA(file);
+        const result = parser(aoa);
+        onSuccess(result);
+        updateAll();
+        showGlobalAlert('Arquivo processado com sucesso.', 'info');
+      } catch (error) {
+        console.error(error);
+        showGlobalAlert(`Erro ao processar arquivo: ${error.message}`, 'error');
+      }
+    }
+
+    async function fileToAoA(file) {
+      if (typeof XLSX === 'undefined') {
+        throw new Error('A biblioteca XLSX não foi carregada. Verifique sua internet.');
+      }
+
+      const data = await file.arrayBuffer();
+
+      const workbook = XLSX.read(data, {
+        type: 'array',
+        cellDates: true
+      });
+
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      return XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        defval: null,
+        raw: true
+      });
+    }
+
+    function updateAll() {
+      clearWarnings();
+      renderStatus();
+
+      if (!state.mainRecords.length) {
+        renderEmpty();
+        return;
+      }
+
+      applyCosts();
+      state.monthList = buildMonthList(state.mainRecords);
+      populateFocusSelect();
+      state.agg = aggregateBase();
+
+      if (!state.diasMap.size) {
+        addWarning('A base de dias úteis ainda não foi carregada. As tendências ficarão zeradas.');
+      }
+
+      if (!state.costMap.size) {
+        addWarning('A base de custo ainda não foi carregada. Margem ficará sem custo.');
+      } else if (state.costInfo.missing > 0) {
+        const pctMissing = state.costInfo.total ? state.costInfo.missing / state.costInfo.total : 0;
+        addWarning(
+          `Base de custo carregada, mas <strong>${fmtInt(state.costInfo.missing)}</strong> de ` +
+          `<strong>${fmtInt(state.costInfo.total)}</strong> registros principais ficaram sem custo ` +
+          `(${fmtPct(pctMissing)}). Confira a tabela de exames sem custo.`
+        );
+      }
+
+      if (!state.metaMap.size) {
+        addWarning('A base de meta regional ainda não foi carregada. Gap e metas ficarão vazios.');
+      }
+
+      if (!state.budgetMap.size) {
+        addWarning('A base de orçamento anual ainda não foi carregada.');
+      }
+
+      if (!state.funnelMap.size) {
+        addWarning('A Base Funil ainda não foi carregada. Potencial por CNPJ ficará vazio.');
+      }
+
+      const seriesTotal = buildTrendSeries(key => getAggValue(key, 'receita'));
+      const seriesRDI = buildTrendSeries(key => getAggValue(key, 'rdiReceita'));
+      const seriesMTG = buildTrendSeries(key => getAggValue(key, 'mtgReceita'));
+
+      const executive = renderExecutiveKPIs(seriesTotal);
+      const metaRegionalData = renderRegionalMetaTable();
+
+      renderKPIs(seriesTotal);
+      renderTrendTable(seriesTotal);
+      renderRdiMtgTable(seriesRDI, seriesMTG);
+      renderMarginTable();
+      renderDemandMonthTable();
+      renderRegionalTable();
+      renderServiceCombo();
+      renderServiceMetaTable();
+      renderMissingCostTable();
+      renderFunnelTable();
+
+      const daily = renderDailyIds();
+
+      renderCharts(
+        seriesTotal,
+        seriesRDI,
+        seriesMTG,
+        daily,
+        metaRegionalData,
+        executive
+      );
+    }
+
+    function renderEmpty() {
+      const ids = [
+        'kpiRealizado',
+        'kpiTendencia',
+        'kpiRobDu',
+        'kpiCusto',
+        'kpiMargem',
+        'kpiMargemPct',
+        'kpiDemandantes',
+        'kpiProjecao',
+        'kpiOrcamento',
+        'kpiGapOrcamento',
+        'kpiMetaMes',
+        'kpiAtingimentoMes',
+        'kpiMetaDemandantes',
+        'kpiGapDemandantes'
+      ];
+
+      ids.forEach(id => setText(id, '-'));
+
+      const tables = [
+        'trendTable',
+        'rdiMtgTable',
+        'marginTable',
+        'demandMonthTable',
+        'regionalTable',
+        'dailyIdsTable',
+        'missingCostTable',
+        'regionalMetaTable',
+        'serviceMetaTable',
+        'funnelTable'
+      ];
+
+      tables.forEach(id => document.getElementById(id).innerHTML = '');
+
+      document.getElementById('serviceCombo').innerHTML = '';
+
+      destroyCharts();
+    }
+
+    function renderStatus() {
+      mainStatus.textContent = state.mainRecords.length
+        ? `${fmtInt(state.mainRecords.length)} registros`
+        : 'não carregado';
+
+      daysStatus.textContent = state.diasMap.size
+        ? `${fmtInt(state.diasMap.size)} meses`
+        : 'não carregado';
+
+      costStatus.textContent = state.costMap.size
+        ? `${fmtInt(state.costMap.size)} itens`
+        : 'não carregado';
+
+      metaStatus.textContent = state.metaMap.size
+        ? `${fmtInt(state.metaMap.size)} meses`
+        : 'não carregado';
+
+      budgetStatus.textContent = state.budgetMap.size
+        ? `${fmtInt(state.budgetMap.size)} anos`
+        : 'não carregado';
+
+      funnelStatus.textContent = state.funnelMap.size
+        ? `${fmtInt(state.funnelMap.size)} CNPJs`
+        : 'não carregado';
+    }
+
+    function populateFocusSelect() {
+      const currentValid = state.focusMonth && state.monthList.some(m => m.key === state.focusMonth);
+      const desired = currentValid
+        ? state.focusMonth
+        : state.monthList.length ? state.monthList[state.monthList.length - 1].key : '';
+
+      focusMonth.innerHTML = '';
+
+      state.monthList.forEach(m => {
+        const option = document.createElement('option');
+        option.value = m.key;
+        option.textContent = m.label;
+        focusMonth.appendChild(option);
+      });
+
+      focusMonth.value = desired;
+      state.focusMonth = desired;
+    }
+
+    function parseMainAoA(aoa) {
+      const header = findHeaderRow(aoa, mainAliases, 5);
+
+      if (!header) {
+        throw new Error(
+          'Não foi possível localizar o cabeçalho da BASE_LUMIAX. ' +
+          'Esperado encontrar colunas como Unidade, ID, EXAMES, Modalidade, Faturamento, Data de Conclução, Mês_ano, SERVIÇO, regional, Volume, Receita, UNIDADE_PADRÃO, CNPJ.'
+        );
+      }
+
+      const records = [];
+
+      for (let i = header.rowIndex + 1; i < aoa.length; i++) {
+        const row = aoa[i];
+
+        if (isEmptyRow(row)) continue;
+
+        const get = field => header.colMap[field] != null ? row[header.colMap[field]] : null;
+
+        const id = cleanText(get('id'));
+        const exames = cleanText(get('exames'));
+        const servico = cleanText(get('servico'));
+        const regional = cleanText(get('regional')) || '(não informado)';
+        const volume = parseNumber(get('volume'));
+        const receita = parseNumber(get('receita'));
+        const data = parseDate(get('data'));
+        const mesAno = cleanText(get('mesano'));
+        const cnpj = cleanText(get('cnpj'));
+
+        const month = getMonthInfo(data, mesAno);
+
+        if (!id && !exames && receita === 0 && volume === 0) continue;
+
+        records.push({
+          id,
+          exames,
+          servico,
+          servicoNorm: normalizeKey(servico),
+          exameNorm: normalizeKey(exames),
+          regional,
+          volume,
+          receita,
+          data,
+          cnpj,
+          cnpjDigits: onlyDigits(cnpj),
+          monthKey: month.key,
+          monthLabel: month.label,
+          custoUnit: 0,
+          custoTotal: 0
+        });
+      }
+
+      if (!records.length) {
+        throw new Error('Nenhum registro útil foi encontrado na BASE_LUMIAX após o cabeçalho.');
+      }
+
+      return records;
+    }
+
+    function parseDaysAoA(aoa) {
+      const header = findHeaderRow(aoa, dayAliases, 2);
+
+      if (!header) {
+        throw new Error(
+          'Não foi possível localizar o cabeçalho da base de dias úteis. ' +
+          'Esperado encontrar colunas como mês ano, DIA, DIA S e PESO.'
+        );
+      }
+
+      const days = [];
+
+      for (let i = header.rowIndex + 1; i < aoa.length; i++) {
+        const row = aoa[i];
+
+        if (isEmptyRow(row)) continue;
+
+        const get = field => header.colMap[field] != null ? row[header.colMap[field]] : null;
+
+        const mesAno = cleanText(get('mesano'));
+        const dia = parseDate(get('dia'));
+        const diaSemana = cleanText(get('diasemana'));
+        const peso = parseNumber(get('peso'));
+
+        if (!dia && !mesAno) continue;
+
+        days.push({
+          mesAno,
+          dia,
+          diaSemana,
+          peso: isNaN(peso) ? 0 : peso
+        });
+      }
+
+      if (!days.length) {
+        throw new Error('Nenhum registro útil foi encontrado na base de dias úteis.');
+      }
+
+      return days;
+    }
+
+    function parseCostAoA(aoa) {
+      const header = findHeaderRow(aoa, costAliases, 2);
+
+      if (!header) {
+        throw new Error(
+          'Não foi possível localizar o cabeçalho da base de custo. ' +
+          'Esperado encontrar colunas como LAUDO e Custo do exame.'
+        );
+      }
+
+      const map = new Map();
+
+      for (let i = header.rowIndex + 1; i < aoa.length; i++) {
+        const row = aoa[i];
+
+        if (isEmptyRow(row)) continue;
+
+        const get = field => header.colMap[field] != null ? row[header.colMap[field]] : null;
+
+        const laudo = cleanText(get('laudo'));
+        const custo = parseNumber(get('custo'));
+
+        if (!laudo) continue;
+
+        map.set(normalizeKey(laudo), custo);
+      }
+
+      if (!map.size) {
+        throw new Error('Nenhum custo válido foi encontrado na base de custo.');
+      }
+
+      return map;
+    }
+
+    function parseMetaAoA(aoa) {
+      const monthNorms = ['mesano', 'mes', 'competencia', 'periodo'];
+      let header = null;
+
+      const maxRows = Math.min(aoa.length, 100);
+
+      for (let i = 0; i < maxRows; i++) {
+        const row = aoa[i];
+
+        if (!Array.isArray(row)) continue;
+
+        let mesCol = -1;
+        const regionalCols = [];
+
+        for (let j = 0; j < row.length; j++) {
+          const normalized = normalizeKey(row[j]);
+
+          if (!normalized) continue;
+
+          if (monthNorms.includes(normalized)) {
+            mesCol = j;
+          } else if (!['total', 'soma'].includes(normalized)) {
+            regionalCols.push({
+              index: j,
+              label: cleanText(row[j]),
+              norm: normalized
+            });
+          }
+        }
+
+        if (mesCol >= 0 && regionalCols.length >= 1) {
+          header = {
+            rowIndex: i,
+            mesCol,
+            regionalCols
+          };
+          break;
+        }
+      }
+
+      if (!header) {
+        throw new Error(
+          'Não foi possível localizar o cabeçalho da meta regional. ' +
+          'Esperado uma coluna de mês e colunas de regionais, como CO, CRC, NO/NE, RIOMINAS, SPSUL.'
+        );
+      }
+
+      const map = new Map();
+      const headers = header.regionalCols.map(item => item.label);
+
+      for (let i = header.rowIndex + 1; i < aoa.length; i++) {
+        const row = aoa[i];
+
+        if (isEmptyRow(row)) continue;
+
+        const monthLabel = cleanText(row[header.mesCol]);
+        const month = monthInfoFromLabel(monthLabel);
+
+        if (month.key === '9999-99') continue;
+
+        const regionals = new Map();
+        let total = 0;
+
+        header.regionalCols.forEach(col => {
+          const value = parseNumber(row[col.index]);
+          regionals.set(col.norm, {
+            label: col.label,
+            value
+          });
+          total += value;
+        });
+
+        map.set(month.key, {
+          label: month.label,
+          total,
+          regionals
+        });
+      }
+
+      if (!map.size) {
+        throw new Error('Nenhum mês válido foi encontrado na meta regional.');
+      }
+
+      return {
+        map,
+        headers
+      };
+    }
+
+    function parseBudgetAoA(aoa) {
+      const header = findHeaderRow(aoa, budgetAliases, 2);
+
+      if (!header) {
+        throw new Error(
+          'Não foi possível localizar o cabeçalho do orçamento por ano. ' +
+          'Esperado encontrar colunas como ano e valor.'
+        );
+      }
+
+      const map = new Map();
+
+      for (let i = header.rowIndex + 1; i < aoa.length; i++) {
+        const row = aoa[i];
+
+        if (isEmptyRow(row)) continue;
+
+        const get = field => header.colMap[field] != null ? row[header.colMap[field]] : null;
+
+        const ano = parseNumber(get('ano'));
+        const valor = parseNumber(get('valor'));
+
+        if (ano > 1900 && ano < 2200) {
+          map.set(Math.round(ano), valor);
+        }
+      }
+
+      if (!map.size) {
+        throw new Error('Nenhum orçamento válido foi encontrado.');
+      }
+
+      return map;
+    }
+
+    function parseFunnelAoA(aoa) {
+      const header = findHeaderRow(aoa, funnelAliases, 2);
+
+      if (!header) {
+        throw new Error(
+          'Não foi possível localizar o cabeçalho da Base Funil. ' +
+          'Esperado encontrar colunas como Cnpj, Razão Social e Potencial.'
+        );
+      }
+
+      const map = new Map();
+
+      for (let i = header.rowIndex + 1; i < aoa.length; i++) {
+        const row = aoa[i];
+
+        if (isEmptyRow(row)) continue;
+
+        const get = field => header.colMap[field] != null ? row[header.colMap[field]] : null;
+
+        const cnpj = cleanText(get('cnpj'));
+        const cnpjDigits = onlyDigits(cnpj);
+
+        if (!cnpjDigits) continue;
+
+        const razao = cleanText(get('razao'));
+        const nomeFantasia = cleanText(get('nomefantasia'));
+        const regional = cleanText(get('regional'));
+        const potencial = parseNumber(get('potencial'));
+
+        map.set(cnpjDigits, {
+          cnpjDigits,
+          cnpjFormatted: formatCnpj(cnpjDigits),
+          razao,
+          nomeFantasia,
+          regional,
+          potencial
+        });
+      }
+
+      if (!map.size) {
+        throw new Error('Nenhum CNPJ válido foi encontrado na Base Funil.');
+      }
+
+      return map;
+    }
+
+    function buildDiasMap(days) {
+      const map = new Map();
+
+      days.forEach(day => {
+        let key = null;
+        let label = null;
+
+        if (day.dia) {
+          key = monthKeyFromDate(day.dia);
+          label = monthLabelFromDate(day.dia);
+        } else {
+          const info = monthInfoFromLabel(day.mesAno);
+          key = info.key;
+          label = info.label;
+        }
+
+        if (!map.has(key)) {
+          map.set(key, {
+            key,
+            label,
+            closed: 0,
+            days: []
+          });
+        }
+
+        const entry = map.get(key);
+        entry.closed += day.peso || 0;
+
+        if (day.dia) {
+          entry.days.push({
+            date: stripTime(day.dia),
+            peso: day.peso || 0
+          });
+        }
+      });
+
+      map.forEach(entry => {
+        entry.days.sort((a, b) => a.date - b.date);
+      });
+
+      return map;
+    }
+
+    function applyCosts() {
+      let matched = 0;
+      let missing = 0;
+
+      state.mainRecords.forEach(record => {
+        const costUnit =
+          state.costMap.get(record.exameNorm) ??
+          state.costMap.get(record.servicoNorm) ??
+          0;
+
+        record.custoUnit = costUnit;
+
+        const qty = record.volume > 0 ? record.volume : 1;
+        record.custoTotal = costUnit * qty;
+
+        if (costUnit > 0) {
+          matched++;
+        } else {
+          missing++;
+        }
+      });
+
+      state.costInfo = {
+        matched,
+        missing,
+        total: state.mainRecords.length
+      };
+    }
+
+    function buildMonthList(records) {
+      const map = new Map();
+
+      records.forEach(record => {
+        if (!map.has(record.monthKey)) {
+          map.set(record.monthKey, record.monthLabel);
+        }
+      });
+
+      return [...map.entries()]
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([key, label]) => ({
+          key,
+          label
+        }));
+    }
+
+    function aggregateBase() {
+      const agg = new Map();
+
+      state.mainRecords.forEach(record => {
+        if (!agg.has(record.monthKey)) {
+          agg.set(record.monthKey, {
+            key: record.monthKey,
+            label: record.monthLabel,
+            receita: 0,
+            volume: 0,
+            custo: 0,
+            rdiReceita: 0,
+            mtgReceita: 0,
+            missingCostReceita: 0,
+            ids: new Set(),
+            idService: new Map(),
+            regional: new Map(),
+            servicos: new Map(),
+            cnpj: new Map(),
+            dates: new Map()
+          });
+        }
+
+        const monthAgg = agg.get(record.monthKey);
+
+        monthAgg.receita += record.receita;
+        monthAgg.volume += record.volume;
+        monthAgg.custo += record.custoTotal;
+
+        if (record.servicoNorm === 'rdi') {
+          monthAgg.rdiReceita += record.receita;
+        }
+
+        if (record.servicoNorm === 'mtg') {
+          monthAgg.mtgReceita += record.receita;
+        }
+
+        if (record.custoUnit === 0 && record.receita > 0) {
+          monthAgg.missingCostReceita += record.receita;
+        }
+
+        if (record.id) {
+          monthAgg.ids.add(record.id);
+
+          if (!monthAgg.idService.has(record.id)) {
+            monthAgg.idService.set(record.id, {
+              rdi: false,
+              mtg: false
+            });
+          }
+
+          const service = monthAgg.idService.get(record.id);
+
+          if (record.servicoNorm === 'rdi' && (record.receita > 0 || record.volume > 0)) {
+            service.rdi = true;
+          }
+
+          if (record.servicoNorm === 'mtg' && (record.receita > 0 || record.volume > 0)) {
+            service.mtg = true;
+          }
+        }
+
+        const regKey = record.regional || '(não informado)';
+
+        if (!monthAgg.regional.has(regKey)) {
+          monthAgg.regional.set(regKey, {
+            receita: 0,
+            volume: 0,
+            custo: 0,
+            ids: new Set()
+          });
+        }
+
+        const reg = monthAgg.regional.get(regKey);
+
+        reg.receita += record.receita;
+        reg.volume += record.volume;
+        reg.custo += record.custoTotal;
+
+        if (record.id) {
+          reg.ids.add(record.id);
+        }
+
+        const serviceKey = record.servico || '(sem serviço)';
+
+        if (!monthAgg.servicos.has(serviceKey)) {
+          monthAgg.servicos.set(serviceKey, {
+            receita: 0,
+            volume: 0
+          });
+        }
+
+        const servAgg = monthAgg.servicos.get(serviceKey);
+        servAgg.receita += record.receita;
+        servAgg.volume += record.volume;
+
+        if (record.cnpjDigits) {
+          if (!monthAgg.cnpj.has(record.cnpjDigits)) {
+            monthAgg.cnpj.set(record.cnpjDigits, {
+              receita: 0,
+              volume: 0
+            });
+          }
+
+          const cnpjAgg = monthAgg.cnpj.get(record.cnpjDigits);
+          cnpjAgg.receita += record.receita;
+          cnpjAgg.volume += record.volume;
+        }
+
+        if (record.data && record.id) {
+          const dayKey = dateKey(record.data);
+
+          if (!monthAgg.dates.has(dayKey)) {
+            monthAgg.dates.set(dayKey, {
+              date: stripTime(record.data),
+              ids: new Set()
+            });
+          }
+
+          monthAgg.dates.get(dayKey).ids.add(record.id);
+        }
+      });
+
+      return agg;
+    }
+
+    function buildTrendSeries(getRealized) {
+      const series = state.monthList.map(month => {
+        const key = month.key;
+        const realized = getRealized(key) || 0;
+
+        const open = getOpenWeight(key, state.cutoff);
+        const closed = getClosedWeight(key);
+
+        const robDu = open > 0 ? realized / open : 0;
+        const trend = robDu * closed;
+
+        return {
+          key,
+          label: month.label,
+          realized,
+          open,
+          closed,
+          robDu,
+          trend,
+          growth: null
+        };
+      });
+
+      for (let i = 0; i < series.length; i++) {
+        if (i > 0 && series[i - 1].trend > 0) {
+          series[i].growth = series[i].trend / series[i - 1].trend - 1;
+        }
+      }
+
+      return series;
+    }
+
+    function getAggValue(monthKey, field) {
+      const monthAgg = state.agg.get(monthKey);
+      return monthAgg ? monthAgg[field] : 0;
+    }
+
+    function getVisibleKeys() {
+      const all = state.monthList.map(m => m.key);
+
+      if (!all.length) return [];
+
+      const focusIndex = all.indexOf(state.focusMonth);
+      const endIndex = focusIndex >= 0 ? focusIndex : all.length - 1;
+
+      if (state.period === 'all') {
+        return all;
+      }
+
+      if (state.period === 'year') {
+        const year = state.focusMonth.slice(0, 4);
+        return all.filter(key => key.startsWith(year));
+      }
+
+      if (state.period === 'last12') {
+        return all.slice(Math.max(0, endIndex - 11), endIndex + 1);
+      }
+
+      if (state.period === 'last6') {
+        return all.slice(Math.max(0, endIndex - 5), endIndex + 1);
+      }
+
+      if (state.period === 'last3') {
+        return all.slice(Math.max(0, endIndex - 2), endIndex + 1);
+      }
+
+      return all;
+    }
+
+    function renderExecutiveKPIs(seriesTotal) {
+      const focusYear = state.focusMonth ? Number(state.focusMonth.slice(0, 4)) : null;
+      const projection = computeYearProjection(seriesTotal, focusYear);
+      const budget = focusYear ? state.budgetMap.get(focusYear) : null;
+
+      const gapBudget = budget != null ? projection - budget : null;
+
+      const metaMonth = state.metaMap.get(state.focusMonth);
+      const metaMonthTotal = metaMonth ? metaMonth.total : null;
+
+      const focusSeries = seriesTotal.find(s => s.key === state.focusMonth) || {
+        trend: 0
+      };
+
+      const monthAttainment = metaMonthTotal ? focusSeries.trend / metaMonthTotal - 1 : null;
+
+      const focusAgg = state.agg.get(state.focusMonth) || {
+        ids: new Set()
+      };
+
+      const demandantes = focusAgg.ids.size;
+      const gapDemandantes = state.metaDemandantes > 0 ? demandantes - state.metaDemandantes : null;
+
+      setText('kpiProjecao', fmtBR(projection));
+      setText('kpiOrcamento', budget != null ? fmtBR(budget) : '-');
+      setText('kpiGapOrcamento', gapBudget != null ? fmtBR(gapBudget) : '-');
+      setText('kpiMetaMes', metaMonthTotal != null ? fmtBR(metaMonthTotal) : '-');
+      setText('kpiAtingimentoMes', monthAttainment != null ? fmtPct(monthAttainment) : '-');
+      setText('kpiMetaDemandantes', state.metaDemandantes > 0 ? fmtInt(state.metaDemandantes) : '-');
+      setText('kpiGapDemandantes', gapDemandantes != null ? fmtInt(gapDemandantes) : '-');
+
+      return {
+        focusYear,
+        projection,
+        budget,
+        gapBudget
+      };
+    }
+
+    function computeYearProjection(seriesTotal, focusYear) {
+      if (!focusYear || !state.focusMonth) return 0;
+
+      const seriesMap = new Map(seriesTotal.map(item => [item.key, item]));
+      const monthKeys = new Set();
+
+      state.monthList.forEach(month => {
+        if (month.key.startsWith(String(focusYear))) {
+          monthKeys.add(month.key);
+        }
+      });
+
+      state.metaMap.forEach((value, key) => {
+        if (key.startsWith(String(focusYear))) {
+          monthKeys.add(key);
+        }
+      });
+
+      const sortedKeys = [...monthKeys].sort();
+
+      let total = 0;
+
+      sortedKeys.forEach(key => {
+        const series = seriesMap.get(key);
+        const meta = state.metaMap.get(key)?.total || 0;
+
+        if (key < state.focusMonth) {
+          total += (series?.realized || meta || 0);
+        } else if (key === state.focusMonth) {
+          total += (series?.trend || series?.realized || meta || 0);
+        } else {
+          total += meta || 0;
+        }
+      });
+
+      return total;
+    }
+
+    function renderKPIs(seriesTotal) {
+      const focusSeries = seriesTotal.find(s => s.key === state.focusMonth) || {
+        realized: 0,
+        trend: 0,
+        robDu: 0
+      };
+
+      const focusAgg = state.agg.get(state.focusMonth) || {
+        custo: 0,
+        ids: new Set()
+      };
+
+      const margem = focusSeries.realized - focusAgg.custo;
+      const margemPct = focusSeries.realized ? margem / focusSeries.realized : null;
+
+      setText('kpiRealizado', fmtBR(focusSeries.realized));
+      setText('kpiTendencia', fmtBR(focusSeries.trend));
+      setText('kpiRobDu', fmtBR(focusSeries.robDu));
+      setText('kpiCusto', fmtBR(focusAgg.custo));
+      setText('kpiMargem', fmtBR(margem));
+      setText('kpiMargemPct', fmtPct(margemPct));
+      setText('kpiDemandantes', fmtInt(focusAgg.ids.size));
+    }
+
+    function renderTrendTable(seriesTotal) {
+      const visibleKeys = getVisibleKeys();
+
+      const rows = seriesTotal
+        .filter(item => visibleKeys.includes(item.key))
+        .map(item => [
+          cell(item.label),
+          cell(fmtBR(item.realized), 'num'),
+          cell(fmtBR(item.open), 'num'),
+          cell(fmtBR(item.closed), 'num'),
+          cell(fmtBR(item.robDu), 'num'),
+          cell(fmtBR(item.trend), 'num'),
+          cell(fmtPctArrow(item.growth), 'num')
+        ]);
+
+      renderTable('trendTable', [
+        'Mês',
+        'Realizado',
+        'DU aberto',
+        'DU fechado',
+        'Receita / DU aberto',
+        'Tendência',
+        'Crescimento'
+      ], rows);
+    }
+
+    function renderRdiMtgTable(seriesRDI, seriesMTG) {
+      const visibleKeys = getVisibleKeys();
+
+      const mtgMap = new Map(seriesMTG.map(item => [item.key, item]));
+
+      const rows = seriesRDI
+        .filter(item => visibleKeys.includes(item.key))
+        .map(rdi => {
+          const mtg = mtgMap.get(rdi.key) || {
+            trend: 0,
+            growth: null
+          };
+
+          const total = rdi.trend + mtg.trend;
+          const partRdi = total ? rdi.trend / total : null;
+          const partMtg = total ? mtg.trend / total : null;
+
+          return [
+            cell(rdi.label),
+            cell(fmtBR(rdi.trend), 'num'),
+            cell(fmtBR(mtg.trend), 'num'),
+            cell(fmtBR(total), 'num'),
+            cell(fmtPctArrow(rdi.growth), 'num'),
+            cell(fmtPctArrow(mtg.growth), 'num'),
+            cell(fmtPct(partRdi), 'num'),
+            cell(fmtPct(partMtg), 'num')
+          ];
+        });
+
+      renderTable('rdiMtgTable', [
+        'Mês',
+        'Tendência RDI',
+        'Tendência MTG',
+        'Total',
+        'Crescimento RDI',
+        'Crescimento MTG',
+        'Participação RDI',
+        'Participação MTG'
+      ], rows);
+    }
+
+    function renderMarginTable() {
+      const visibleKeys = getVisibleKeys();
+
+      const rows = visibleKeys.map(key => {
+        const monthAgg = state.agg.get(key) || {
+          receita: 0,
+          custo: 0
+        };
+
+        const receita = monthAgg.receita || 0;
+        const custo = monthAgg.custo || 0;
+        const margem = receita - custo;
+        const margemPct = receita ? margem / receita : null;
+
+        return [
+          cell(monthLabelFromKey(key)),
+          cell(fmtBR(receita), 'num'),
+          cell(fmtBR(custo), 'num'),
+          cell(fmtBR(margem), 'num'),
+          cell(fmtPct(margemPct), 'num')
+        ];
+      });
+
+      renderTable('marginTable', [
+        'Mês',
+        'Receita',
+        'Custo',
+        'Margem',
+        'Margem %'
+      ], rows);
+    }
+
+    function renderRegionalMetaTable() {
+      const focusMeta = state.metaMap.get(state.focusMonth);
+      const monthAgg = state.agg.get(state.focusMonth);
+
+      const open = getOpenWeight(state.focusMonth, state.cutoff);
+      const closed = getClosedWeight(state.focusMonth);
+
+      const regionalMap = new Map();
+
+      if (focusMeta) {
+        focusMeta.regionals.forEach((value, normKey) => {
+          regionalMap.set(normKey, {
+            label: value.label,
+            realized: 0,
+            trend: 0,
+            meta: value.value,
+            ids: 0
+          });
+        });
+      }
+
+      if (monthAgg) {
+        monthAgg.regional.forEach((reg, label) => {
+          const normKey = normalizeKey(label);
+
+          if (!regionalMap.has(normKey)) {
+            regionalMap.set(normKey, {
+              label,
+              realized: 0,
+              trend: 0,
+              meta: 0,
+              ids: 0
+            });
+          }
+
+          const item = regionalMap.get(normKey);
+          item.realized = reg.receita;
+          item.trend = open > 0 ? (reg.receita / open) * closed : 0;
+          item.ids = reg.ids.size;
+        });
+      }
+
+      const data = [...regionalMap.values()].sort((a, b) => b.trend - a.trend);
+
+      const rows = data.map(item => {
+        const gap = item.trend - item.meta;
+        const attainment = item.meta ? item.trend / item.meta - 1 : null;
+
+        return [
+          cell(item.label),
+          cell(fmtBR(item.realized), 'num'),
+          cell(fmtBR(item.trend), 'num'),
+          cell(fmtBR(item.meta), 'num'),
+          cell(fmtBR(gap), 'num'),
+          cell(fmtPctArrow(attainment), 'num')
+        ];
+      });
+
+      renderTable('regionalMetaTable', [
+        'Regional',
+        'Realizado',
+        'Tendência',
+        'Meta',
+        'Gap',
+        'Atingimento'
+      ], rows);
+
+      return data;
+    }
+
+    function renderServiceMetaTable() {
+      const monthAgg = state.agg.get(state.focusMonth);
+      const open = getOpenWeight(state.focusMonth, state.cutoff);
+      const closed = getClosedWeight(state.focusMonth);
+
+      const services = [];
+
+      if (monthAgg) {
+        monthAgg.servicos.forEach((value, label) => {
+          const trend = open > 0 ? (value.receita / open) * closed : 0;
+
+          services.push({
+            label,
+            trend
+          });
+        });
+      }
+
+      services.sort((a, b) => b.trend - a.trend);
+
+      const total = services.reduce((sum, item) => sum + item.trend, 0);
+      const metaTotal = state.metaMap.get(state.focusMonth)?.total || 0;
+
+      const rows = services.map(item => [
+        cell(item.label),
+        cell(fmtBR(item.trend), 'num'),
+        cell(fmtPct(total ? item.trend / total : null), 'num')
+      ]);
+
+      rows.push([
+        cell('Total'),
+        cell(fmtBR(total), 'num'),
+        cell('100%')
+      ]);
+
+      rows.push([
+        cell('Meta'),
+        cell(fmtBR(metaTotal), 'num'),
+        cell(fmtPct(metaTotal ? total / metaTotal : null), 'num')
+      ]);
+
+      renderTable('serviceMetaTable', [
+        'Serviço',
+        'Tendência',
+        'Participação'
+      ], rows);
+    }
+
+    function renderFunnelTable() {
+      if (!state.funnelMap.size || !state.focusMonth) {
+        renderTable('funnelTable', [
+          'CNPJ',
+          'Razão Social',
+          'Receita mês anterior',
+          'Receita mês foco (tendência)',
+          'Potencial',
+          'Gap',
+          'Gap %'
+        ], []);
+        return;
+      }
+
+      const prevKey = shiftMonthKey(state.focusMonth, -1);
+
+      const focusCnpjMap = state.agg.get(state.focusMonth)?.cnpj || new Map();
+      const prevCnpjMap = state.agg.get(prevKey)?.cnpj || new Map();
+
+      const open = getOpenWeight(state.focusMonth, state.cutoff);
+      const closed = getClosedWeight(state.focusMonth);
+
+      const cnpjSet = new Set([
+        ...focusCnpjMap.keys(),
+        ...prevCnpjMap.keys()
+      ]);
+
+      const rowsData = [];
+
+      cnpjSet.forEach(cnpjDigits => {
+        const funnel = state.funnelMap.get(cnpjDigits);
+
+        if (!funnel) return;
+
+        const previousReal = prevCnpjMap.get(cnpjDigits)?.receita || 0;
+        const focusReal = focusCnpjMap.get(cnpjDigits)?.receita || 0;
+        const focusTrend = open > 0 ? (focusReal / open) * closed : 0;
+
+        const potential = funnel.potencial || 0;
+        const gap = focusTrend - potential;
+        const gapPct = potential ? focusTrend / potential : null;
+
+        rowsData.push({
+          cnpj: funnel.cnpjFormatted,
+          razao: funnel.razao || funnel.nomeFantasia || '-',
+          previousReal,
+          focusTrend,
+          potential,
+          gap,
+          gapPct
+        });
+      });
+
+      rowsData.sort((a, b) => b.potential - a.potential);
+
+      const rows = rowsData.slice(0, 100).map(item => [
+        cell(item.cnpj),
+        cell(item.razao),
+        cell(fmtBR(item.previousReal), 'num'),
+        cell(fmtBR(item.focusTrend), 'num'),
+        cell(fmtBR(item.potential), 'num'),
+        cell(fmtBR(item.gap), 'num'),
+        cell(fmtPct(item.gapPct), 'num')
+      ]);
+
+      renderTable('funnelTable', [
+        'CNPJ',
+        'Razão Social',
+        'Receita mês anterior',
+        'Receita mês foco (tendência)',
+        'Potencial',
+        'Gap',
+        'Gap %'
+      ], rows);
+    }
+
+    function renderDemandMonthTable() {
+      const visibleKeys = getVisibleKeys();
+
+      const rows = visibleKeys.map(key => {
+        const monthAgg = state.agg.get(key);
+
+        const combo = comboCounts(monthAgg ? monthAgg.idService : new Map());
+
+        return [
+          cell(monthLabelFromKey(key)),
+          cell(fmtInt(combo.total), 'num'),
+          cell(fmtInt(combo.rdiOnly), 'num'),
+          cell(fmtInt(combo.mtgOnly), 'num'),
+          cell(fmtInt(combo.both), 'num')
+        ];
+      });
+
+      renderTable('demandMonthTable', [
+        'Mês',
+        'IDs únicos',
+        'Somente RDI',
+        'Somente MTG',
+        'RDI + MTG'
+      ], rows);
+    }
+
+    function renderRegionalTable() {
+      const monthAgg = state.agg.get(state.focusMonth);
+
+      if (!monthAgg) {
+        renderTable('regionalTable', ['Regional', 'Realizado', 'Tendência', 'IDs', 'Participação'], []);
+        return;
+      }
+
+      const open = getOpenWeight(state.focusMonth, state.cutoff);
+      const closed = getClosedWeight(state.focusMonth);
+
+      const regionals = [];
+
+      monthAgg.regional.forEach((reg, name) => {
+        const trend = open > 0 ? (reg.receita / open) * closed : 0;
+
+        regionals.push({
+          name,
+          realized: reg.receita,
+          trend,
+          ids: reg.ids.size
+        });
+      });
+
+      regionals.sort((a, b) => b.trend - a.trend);
+
+      const totalTrend = regionals.reduce((sum, item) => sum + item.trend, 0);
+
+      const rows = regionals.map(item => [
+        cell(item.name),
+        cell(fmtBR(item.realized), 'num'),
+        cell(fmtBR(item.trend), 'num'),
+        cell(fmtInt(item.ids), 'num'),
+        cell(fmtPct(totalTrend ? item.trend / totalTrend : null), 'num')
+      ]);
+
+      renderTable('regionalTable', [
+        'Regional',
+        'Realizado',
+        'Tendência',
+        'IDs',
+        'Participação'
+      ], rows);
+    }
+
+    function renderServiceCombo() {
+      const monthAgg = state.agg.get(state.focusMonth);
+      const container = document.getElementById('serviceCombo');
+
+      if (!monthAgg) {
+        container.innerHTML = '<div class="muted">Sem dados para o mês foco.</div>';
+        return;
+      }
+
+      const combo = comboCounts(monthAgg.idService);
+
+      container.innerHTML = `
+        <div class="kpis" style="margin-bottom:0;">
+          <div class="card kpi">
+            <div class="label">Total</div>
+            <div class="value">${fmtInt(combo.total)}</div>
+          </div>
+
+          <div class="card kpi">
+            <div class="label">Somente RDI</div>
+            <div class="value">${fmtInt(combo.rdiOnly)}</div>
+          </div>
+
+          <div class="card kpi">
+            <div class="label">Somente MTG</div>
+            <div class="value">${fmtInt(combo.mtgOnly)}</div>
+          </div>
+
+          <div class="card kpi">
+            <div class="label">RDI + MTG</div>
+            <div class="value">${fmtInt(combo.both)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDailyIds() {
+      const daily = computeDailyCumulative(state.focusMonth);
+
+      const rows = daily.labels.map((label, index) => [
+        cell(label),
+        cell(fmtInt(daily.values[index]), 'num')
+      ]);
+
+      renderTable('dailyIdsTable', [
+        'Dia',
+        'IDs acumulados'
+      ], rows);
+
+      return daily;
+    }
+
+    function renderMissingCostTable() {
+      if (!state.costMap.size) {
+        renderTable('missingCostTable', ['Exame', 'Receita', 'Volume'], []);
+        return;
+      }
+
+      const missingMap = new Map();
+
+      state.mainRecords.forEach(record => {
+        if (record.custoUnit === 0 && record.receita > 0) {
+          const key = record.exames || '(sem exame)';
+
+          if (!missingMap.has(key)) {
+            missingMap.set(key, {
+              exame: key,
+              receita: 0,
+              volume: 0
+            });
+          }
+
+          const item = missingMap.get(key);
+          item.receita += record.receita;
+          item.volume += record.volume;
+        }
+      });
+
+      const rows = [...missingMap.values()]
+        .sort((a, b) => b.receita - a.receita)
+        .slice(0, 30)
+        .map(item => [
+          cell(item.exame),
+          cell(fmtBR(item.receita), 'num'),
+          cell(smartFmt(item.volume), 'num')
+        ]);
+
+      renderTable('missingCostTable', [
+        'Exame',
+        'Receita sem custo',
+        'Volume'
+      ], rows);
+    }
+
+    function computeDailyCumulative(monthKey) {
+      const monthAgg = state.agg.get(monthKey);
+
+      if (!monthAgg || !monthAgg.dates.size) {
+        return {
+          labels: [],
+          values: []
+        };
+      }
+
+      const entries = [...monthAgg.dates.entries()]
+        .map(([key, value]) => value)
+        .sort((a, b) => a.date - b.date);
+
+      const cumulative = new Set();
+      const labels = [];
+      const values = [];
+
+      entries.forEach(entry => {
+        entry.ids.forEach(id => cumulative.add(id));
+
+        labels.push(entry.date.toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit'
+        }));
+
+        values.push(cumulative.size);
+      });
+
+      return {
+        labels,
+        values
+      };
+    }
+
+    function renderCharts(seriesTotal, seriesRDI, seriesMTG, daily, metaRegionalData, executive) {
+      destroyCharts();
+
+      if (typeof Chart === 'undefined') {
+        addWarning('Chart.js não carregado. Gráficos não serão exibidos.');
+        return;
+      }
+
+      const visibleKeys = getVisibleKeys();
+
+      const totalVisible = seriesTotal.filter(item => visibleKeys.includes(item.key));
+      const rdiVisible = seriesRDI.filter(item => visibleKeys.includes(item.key));
+      const mtgVisible = seriesMTG.filter(item => visibleKeys.includes(item.key));
+
+      const labels = totalVisible.map(item => item.label);
+
+      const rdiMap = new Map(rdiVisible.map(item => [item.key, item]));
+      const mtgMap = new Map(mtgVisible.map(item => [item.key, item]));
+
+      const rdiData = totalVisible.map(item => rdiMap.get(item.key)?.trend || 0);
+      const mtgData = totalVisible.map(item => mtgMap.get(item.key)?.trend || 0);
+
+      Chart.defaults.font.family = "'Segoe UI', Arial, sans-serif";
+      Chart.defaults.color = '#374151';
+
+      state.charts.push(new Chart(document.getElementById('chartTendencia'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Realizado',
+              data: totalVisible.map(item => item.realized),
+              borderColor: '#2563eb',
+              backgroundColor: '#2563eb',
+              tension: 0.25
+            },
+            {
+              label: 'Tendência',
+              data: totalVisible.map(item => item.trend),
+              borderColor: '#16a34a',
+              backgroundColor: '#16a34a',
+              borderDash: [6, 6],
+              tension: 0.25
+            }
+          ]
+        },
+        options: {
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            },
+            tooltip: {
+              callbacks: {
+                label: ctx => ctx.dataset.label + ': ' + fmtBR(ctx.parsed.y)
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: value => fmtBR(value)
+              }
+            }
+          }
+        }
+      }));
+
+      state.charts.push(new Chart(document.getElementById('chartRdiMtg'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'RDI',
+              data: rdiData,
+              borderColor: '#7c3aed',
+              backgroundColor: '#7c3aed',
+              tension: 0.25
+            },
+            {
+              label: 'MTG',
+              data: mtgData,
+              borderColor: '#f97316',
+              backgroundColor: '#f97316',
+              tension: 0.25
+            }
+          ]
+        },
+        options: {
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            },
+            tooltip: {
+              callbacks: {
+                label: ctx => ctx.dataset.label + ': ' + fmtBR(ctx.parsed.y)
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: value => fmtBR(value)
+              }
+            }
+          }
+        }
+      }));
+
+      if (metaRegionalData.length) {
+        state.charts.push(new Chart(document.getElementById('chartMetaRegional'), {
+          type: 'bar',
+          data: {
+            labels: metaRegionalData.map(item => item.label),
+            datasets: [
+              {
+                label: 'Tendência',
+                data: metaRegionalData.map(item => item.trend),
+                backgroundColor: '#2563eb',
+                borderRadius: 8
+              },
+              {
+                label: 'Meta',
+                data: metaRegionalData.map(item => item.meta),
+                backgroundColor: '#9ca3af',
+                borderRadius: 8
+              }
+            ]
+          },
+          options: {
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom'
+              },
+              tooltip: {
+                callbacks: {
+                  label: ctx => ctx.dataset.label + ': ' + fmtBR(ctx.parsed.y)
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: value => fmtBR(value)
+                }
+              }
+            }
+          }
+        }));
+      }
+
+      if (executive && executive.budget != null) {
+        state.charts.push(new Chart(document.getElementById('chartBudget'), {
+          type: 'bar',
+          data: {
+            labels: [
+              `Projeção ${executive.focusYear}`,
+              `Orçamento ${executive.focusYear}`
+            ],
+            datasets: [{
+              label: 'Valor',
+              data: [
+                executive.projection,
+                executive.budget
+              ],
+              backgroundColor: [
+                '#16a34a',
+                '#111827'
+              ],
+              borderRadius: 10
+            }]
+          },
+          options: {
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                callbacks: {
+                  label: ctx => 'Valor: ' + fmtBR(ctx.parsed.y)
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: value => fmtBR(value)
+                }
+              }
+            }
+          }
+        }));
+      }
+
+      if (daily.labels.length) {
+        state.charts.push(new Chart(document.getElementById('chartDemandantes'), {
+          type: 'line',
+          data: {
+            labels: daily.labels,
+            datasets: [{
+              label: 'IDs acumulados',
+              data: daily.values,
+              borderColor: '#0f766e',
+              backgroundColor: '#0f766e',
+              tension: 0.25,
+              fill: true
+            }]
+          },
+          options: {
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                callbacks: {
+                  label: ctx => 'IDs acumulados: ' + fmtInt(ctx.parsed.y)
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: value => fmtInt(value)
+                }
+              }
+            }
+          }
+        }));
+      }
+    }
+
+    function destroyCharts() {
+      state.charts.forEach(chart => chart.destroy());
+      state.charts = [];
+    }
+
+    function findHeaderRow(aoa, aliases, minScore) {
+      const normMap = makeNormMap(aliases);
+      let best = null;
+
+      const maxRows = Math.min(aoa.length, 100);
+
+      for (let i = 0; i < maxRows; i++) {
+        const row = aoa[i];
+
+        if (!Array.isArray(row)) continue;
+
+        const colMap = {};
+        const foundFields = new Set();
+
+        for (let j = 0; j < row.length; j++) {
+          const normalized = normalizeKey(row[j]);
+
+          if (!normalized) continue;
+
+          const field = normMap.get(normalized);
+
+          if (field && !foundFields.has(field)) {
+            colMap[field] = j;
+            foundFields.add(field);
+          }
+        }
+
+        const score = foundFields.size;
+
+        if (!best || score > best.score) {
+          best = {
+            score,
+            rowIndex: i,
+            colMap,
+            headers: row
+          };
+        }
+      }
+
+      if (!best || best.score < minScore) return null;
+
+      const allFields = Object.keys(aliases);
+      best.missing = allFields.filter(field => !(field in best.colMap));
+
+      return best;
+    }
+
+    function makeNormMap(aliases) {
+      const map = new Map();
+
+      for (const [field, list] of Object.entries(aliases)) {
+        list.forEach(alias => map.set(normalizeKey(alias), field));
+      }
+
+      return map;
+    }
+
+    function normalizeKey(value) {
+      if (value == null) return '';
+
+      return String(value)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '');
+    }
+
+    function isEmptyRow(row) {
+      if (!row || !row.length) return true;
+
+      return row.every(value => {
+        return value === null || value === undefined || String(value).trim() === '';
+      });
+    }
+
+    function cleanText(value) {
+      if (value == null) return '';
+      if (value instanceof Date) return value.toLocaleDateString('pt-BR');
+      if (typeof value === 'boolean') return value ? 'Sim' : 'Não';
+
+      return String(value).trim();
+    }
+
+    function onlyDigits(value) {
+      return String(value ?? '').replace(/\D/g, '');
+    }
+
+    function formatCnpj(digits) {
+      digits = onlyDigits(digits);
+
+      if (digits.length === 14) {
+        return digits.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+      }
+
+      return digits;
+    }
+
+    function parseNumber(value) {
+      if (value == null || value === '') return 0;
+
+      if (typeof value === 'number') {
+        return isFinite(value) ? value : 0;
+      }
+
+      if (value instanceof Date) return 0;
+      if (typeof value === 'boolean') return value ? 1 : 0;
+
+      let text = String(value).trim();
+
+      if (!text) return 0;
+
+      text = text.replace(/R\$/gi, '').replace(/[\s\u00A0]/g, '');
+
+      let negative = false;
+
+      if (/^\(.*\)$/.test(text)) {
+        negative = true;
+        text = text.replace(/[()]/g, '');
+      }
+
+      const lastComma = text.lastIndexOf(',');
+      const lastDot = text.lastIndexOf('.');
+
+      if (lastComma > -1 && lastDot > -1) {
+        if (lastComma > lastDot) {
+          text = text.replace(/\./g, '').replace(',', '.');
+        } else {
+          text = text.replace(/,/g, '');
+        }
+      } else if (lastComma > -1) {
+        text = text.replace(/,/g, '.');
+      } else if (/^\d{1,3}(\.\d{3})+$/.test(text)) {
+        text = text.replace(/\./g, '');
+      }
+
+      const number = parseFloat(text);
+
+      if (isNaN(number)) return 0;
+
+      return negative ? -number : number;
+    }
+
+    function parseDate(value) {
+      if (value == null || value === '') return null;
+
+      if (value instanceof Date) {
+        return isNaN(value.getTime()) ? null : stripTime(value);
+      }
+
+      if (typeof value === 'number') {
+        if (value <= 0) return null;
+
+        const date = new Date(1899, 11, 30);
+        date.setDate(date.getDate() + Math.floor(value));
+
+        return isNaN(date.getTime()) ? null : stripTime(date);
+      }
+
+      if (typeof value === 'string') {
+        const text = value.trim();
+
+        if (!text) return null;
+
+        let match = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+
+        if (match) {
+          return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+        }
+
+        match = text.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+
+        if (match) {
+          let year = parseInt(match[3], 10);
+
+          if (year < 100) {
+            year += year < 50 ? 2000 : 1900;
+          }
+
+          const month = parseInt(match[2], 10) - 1;
+          const day = parseInt(match[1], 10);
+
+          const date = new Date(year, month, day);
+
+          if (date.getMonth() === month) {
+            return stripTime(date);
+          }
+        }
+
+        const date = new Date(text);
+
+        return isNaN(date.getTime()) ? null : stripTime(date);
+      }
+
+      return null;
+    }
+
+    function parseInputDate(value) {
+      if (!value) return null;
+
+      const parts = value.split('-').map(Number);
+
+      if (parts.length !== 3) return null;
+
+      const date = new Date(parts[0], parts[1] - 1, parts[2]);
+
+      return isNaN(date.getTime()) ? null : date;
+    }
+
+    function stripTime(date) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }
+
+    function toInputDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+
+      return `${year}-${month}-${day}`;
+    }
+
+    function dateKey(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+
+      return `${year}-${month}-${day}`;
+    }
+
+    function shiftMonthKey(key, delta) {
+      if (!key || key === '9999-99') return '';
+
+      const parts = key.split('-').map(Number);
+
+      if (parts.length !== 2) return '';
+
+      const date = new Date(parts[0], parts[1] - 1 + delta, 1);
+
+      return monthKeyFromDate(date);
+    }
+
+    function getMonthInfo(dateValue, mesAnoValue) {
+      if (dateValue) {
+        return {
+          key: monthKeyFromDate(dateValue),
+          label: monthLabelFromDate(dateValue)
+        };
+      }
+
+      return monthInfoFromLabel(mesAnoValue);
+    }
+
+    function monthKeyFromDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+
+      return `${year}-${month}`;
+    }
+
+    function monthLabelFromDate(date) {
+      return `${monthPt(date.getMonth() + 1)}/${date.getFullYear()}`;
+    }
+
+    function monthLabelFromKey(key) {
+      if (!key) return '';
+
+      const [year, month] = key.split('-');
+
+      const monthNumber = Number(month);
+
+      if (!year || !monthNumber || monthNumber < 1 || monthNumber > 12) {
+        return key;
+      }
+
+      return `${monthPt(monthNumber)}/${year}`;
+    }
+
+    function monthInfoFromLabel(label) {
+      const text = cleanText(label);
+
+      if (!text) {
+        return {
+          key: '9999-99',
+          label: '(sem mês)'
+        };
+      }
+
+      const parts = text.split(/[\/\-\s]+/).filter(Boolean);
+
+      if (parts.length >= 2) {
+        const month = monthNumberFromAbbr(parts[0]);
+        let year = parseInt(parts[1], 10);
+
+        if (!isNaN(month) && month > 0 && !isNaN(year)) {
+          if (year < 100) {
+            year += year < 50 ? 2000 : 1900;
+          }
+
+          return {
+            key: `${year}-${String(month).padStart(2, '0')}`,
+            label: `${monthPt(month)}/${year}`
+          };
+        }
+      }
+
+      return {
+        key: '9999-99',
+        label: text
+      };
+    }
+
+    function monthPt(month) {
+      const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+      return months[month - 1] || '';
+    }
+
+    function monthNumberFromAbbr(text) {
+      const key = normalizeKey(text).slice(0, 3);
+
+      const map = {
+        jan: 1,
+        fev: 2,
+        mar: 3,
+        abr: 4,
+        mai: 5,
+        jun: 6,
+        jul: 7,
+        ago: 8,
+        set: 9,
+        out: 10,
+        nov: 11,
+        dez: 12
+      };
+
+      return map[key] || 0;
+    }
+
+    function getClosedWeight(monthKey) {
+      const entry = state.diasMap.get(monthKey);
+      return entry ? entry.closed : 0;
+    }
+
+    function getOpenWeight(monthKey, cutoff) {
+      const entry = state.diasMap.get(monthKey);
+
+      if (!entry) return 0;
+      if (!cutoff) return entry.closed;
+
+      const cutoffKey = monthKeyFromDate(cutoff);
+
+      if (monthKey < cutoffKey) {
+        return entry.closed;
+      }
+
+      if (monthKey > cutoffKey) {
+        return 0;
+      }
+
+      if (!entry.days.length) {
+        return entry.closed;
+      }
+
+      let total = 0;
+
+      entry.days.forEach(day => {
+        if (day.date <= cutoff) {
+          total += day.peso;
+        }
+      });
+
+      return total;
+    }
+
+    function comboCounts(idServiceMap) {
+      let rdiOnly = 0;
+      let mtgOnly = 0;
+      let both = 0;
+
+      idServiceMap.forEach(service => {
+        if (service.rdi && service.mtg) {
+          both++;
+        } else if (service.rdi) {
+          rdiOnly++;
+        } else if (service.mtg) {
+          mtgOnly++;
+        }
+      });
+
+      return {
+        total: idServiceMap.size,
+        rdiOnly,
+        mtgOnly,
+        both
+      };
+    }
+
+    function renderTable(containerId, headers, rows) {
+      const container = document.getElementById(containerId);
+
+      let html = '<table><thead><tr>';
+
+      headers.forEach(header => {
+        html += `<th>${esc(header)}</th>`;
+      });
+
+      html += '</tr></thead><tbody>';
+
+      rows.forEach(row => {
+        html += '<tr>';
+
+        row.forEach(cellObj => {
+          html += `<td class="${cellObj.cls || ''}">${esc(cellObj.value)}</td>`;
+        });
+
+        html += '</tr>';
+      });
+
+      html += '</tbody></table>';
+
+      container.innerHTML = html;
+    }
+
+    function cell(value, cls = '') {
+      return {
+        value,
+        cls
+      };
+    }
+
+    function setText(id, text) {
+      document.getElementById(id).textContent = text;
+    }
+
+    function fmtInt(value) {
+      return new Intl.NumberFormat('pt-BR', {
+        maximumFractionDigits: 0
+      }).format(value || 0);
+    }
+
+    function fmtBR(value) {
+      return new Intl.NumberFormat('pt-BR', {
+        maximumFractionDigits: 2
+      }).format(value || 0);
+    }
+
+    function smartFmt(value) {
+      if (typeof value !== 'number' || isNaN(value)) return '0';
+
+      return Number.isInteger(value) ? fmtInt(value) : fmtBR(value);
+    }
+
+    function fmtPct(value) {
+      if (value == null || isNaN(value) || !isFinite(value)) return '-';
+
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'percent',
+        maximumFractionDigits: 2
+      }).format(value);
+    }
+
+    function fmtPctArrow(value) {
+      if (value == null || isNaN(value) || !isFinite(value)) return '-';
+
+      const formatted = fmtPct(value);
+
+      if (value > 0) return `${formatted} ↑`;
+      if (value < 0) return `${formatted} ↓`;
+
+      return formatted;
+    }
+
+    function esc(value) {
+      return String(value ?? '')
+        .replace(/[&<>"']/g, match => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[match]));
+    }
+
+    function showGlobalAlert(message, type = 'info') {
+      const alert = document.getElementById('globalAlert');
+      alert.innerHTML = message;
+      alert.className = `alert ${type}`;
+      alert.hidden = false;
+    }
+
+    function clearWarnings() {
+      document.getElementById('warnings').innerHTML = '';
+    }
+
+    function addWarning(message) {
+      const div = document.createElement('div');
+      div.className = 'alert warning';
+      div.innerHTML = message;
+      document.getElementById('warnings').appendChild(div);
+    }
+  </script>
+</body>
+</html>
